@@ -93,6 +93,34 @@
             pointer-events: none;
         }
 
+        /* --- MÜZİK KONTROL BUTONU --- */
+        #music-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000; /* En üstte */
+            font-family: var(--font-console);
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            color: #000;
+            image-rendering: pixelated;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        #music-toggle:active {
+            border-top: 2px solid #000;
+            border-left: 2px solid #000;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+            transform: translate(1px, 1px);
+        }
+
         /* --- ÜST KISIM (BAŞLIKLAR) --- */
         #top-section {
             position: absolute;
@@ -254,6 +282,10 @@
 </head>
 <body>
 
+    <!-- SES DOSYALARI -->
+    <audio id="bg-music" loop src="https://raw.githubusercontent.com/decentralize-dfw/finder/main/blog-anthem.mp3"></audio>
+    <audio id="click-sound" src="https://raw.githubusercontent.com/decentralize-dfw/finder/main/click-blog.mp3"></audio>
+
     <!-- INTRO LAYER (MAVİ EKRAN) -->
     <div id="intro-layer">
         <!-- SOLDA LOGO -->
@@ -265,6 +297,9 @@
 
     <!-- MAIN SCREEN ANIMATED GIF (Sağ Üstte Loop) -->
     <img src="https://raw.githubusercontent.com/decentralize-dfw/finder/main/logoanimated.gif" id="main-gif" alt="Animated Logo">
+
+    <!-- MÜZİK AÇ/KAPA BUTONU -->
+    <button id="music-toggle">MUSIC: ON</button>
 
     <!-- MODAL POPUP -->
     <div id="modal-overlay">
@@ -308,7 +343,33 @@
         const REPO = 'dfw-blog';
         const FOLDER = ''; 
 
-        // ASCII SANAT VERİSİ (Geri Geldi!)
+        // SES AYARLARI
+        const bgMusic = document.getElementById('bg-music');
+        const clickSound = document.getElementById('click-sound');
+        const musicToggle = document.getElementById('music-toggle');
+
+        bgMusic.volume = 0.5; // Arkaplan müzik sesi
+        clickSound.volume = 0.3; // Tıklama sesi (hafif)
+
+        // HER TIKLAMADA SES ÇAL
+        document.addEventListener('click', () => {
+            clickSound.currentTime = 0; // Sesi başa sar
+            clickSound.play().catch(e => {}); // Hata olursa yoksay
+        });
+
+        // MÜZİK TOGGLE İŞLEVİ
+        musicToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // Global click sesini tekrar tetikleme (gerçi her türlü çalar)
+            if (bgMusic.paused) {
+                bgMusic.play();
+                musicToggle.innerText = "MUSIC: ON";
+            } else {
+                bgMusic.pause();
+                musicToggle.innerText = "MUSIC: OFF";
+            }
+        });
+
+        // ASCII SANAT VERİSİ
         const asciiArt = `
       :::::::::  :::::::::: :::       :::      
      :+:    :+: :+:        :+:       :+:       
@@ -330,7 +391,21 @@
             // 1. ASCII Sanatını Render Et
             renderAscii();
 
-            // 2. Intro 5 Saniye Sonra Kaybolsun
+            // 2. Müzik Başlatma Denemesi (Otomatik)
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Otomatik oynatma engellendi. İlk etkileşim bekleniyor.");
+                    // Eğer tarayıcı engellerse, ilk tıklamada başlat
+                    document.addEventListener('click', () => {
+                        if (bgMusic.paused && musicToggle.innerText === "MUSIC: ON") {
+                            bgMusic.play();
+                        }
+                    }, { once: true });
+                });
+            }
+
+            // 3. Intro 5 Saniye Sonra Kaybolsun
             setTimeout(() => {
                 document.getElementById('intro-layer').style.opacity = '0';
                 setTimeout(() => {
@@ -377,7 +452,15 @@
                 const apiUrl = `https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`;
                 const res = await fetch(apiUrl);
                 
-                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                // HATA KONTROLLERİ EKLENDİ
+                if (res.status === 403) {
+                     throw new Error('API Rate Limit Exceeded (GitHub limit doldu, 1 saat sonra tekrar deneyin)');
+                }
+                if (res.status === 404) {
+                     throw new Error('Repository Not Found (Repo bulunamadı veya Public değil)');
+                }
+                if (!res.ok) throw new Error(`GitHub Error: ${res.status}`);
+                
                 const files = await res.json();
 
                 const ignored = ['index.html', 'style.css', 'README.md', 'LICENSE', 'CNAME'];
@@ -410,7 +493,8 @@
 
             } catch(e) {
                 console.error(e);
-                listContainer.innerHTML = `<li style="color:red; background:rgba(0,0,0,0.8);">ERROR: ${e.message}</li>`;
+                // Hata mesajını daha belirgin göster
+                listContainer.innerHTML = `<li style="color:red; background:rgba(0,0,0,0.8); padding:10px;">ERROR: ${e.message}</li>`;
             }
         }
 
