@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DFW BLOG</title>
+    <style>
+        /* --- RESET & BASE --- */
+        :root {
+            --font-console: 'Courier New', Courier, monospace;
+            --font-comic: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+            
+            --color-welcome: #ffffff; 
+            --bg-welcome: #0000AA;    /* VINTAGE MAVİ */
+            
+            --color-title: #00ff00;   /* YEŞİL */
+            --color-link: #00ffff;    /* CYAN/MAVİ */
+            
+            --modal-bg: #c0c0c0; /* Windows 95 Gri */
+            --modal-text: #000;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background-image: url('https://raw.githubusercontent.com/decentralize-dfw/finder/main/BACKG3.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            font-family: var(--font-console);
+        }
+
+        /* --- INTRO LAYER --- */
+        #intro-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-welcome); /* VINTAGE MAVİ ARKA PLAN */
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1.5s ease-in-out;
+            overflow: hidden;
+        }
+
+        /* Intro Logosu (SOL TARAFTA) */
+        #intro-logo {
+            position: absolute;
+            top: 50px;
+            left: 50px;       /* SOLA ALINDI */
+            width: 250px;     /* Biraz daha derli toplu */
+            height: auto;
+            image-rendering: pixelated;
+        }
+
+        /* ASCII Sanatı Konteyneri (ORTADA) */
+        #ascii-art-container {
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            white-space: pre;
+            text-align: center;
+            cursor: default;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #000; /* Mavi zemin üstünde görünsün diye */
+        }
+
+        /* İnteraktif ASCII Karakterleri */
+        .char {
+            display: inline-block;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        .char:hover {
+            transform: translate(2px, -2px) rotate(10deg) scale(1.2);
+            color: #00ff00; /* Matrix Yeşili */
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        /* Ana Ekran Animasyonlu GIF */
+        #main-gif {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 150px;
+            height: auto;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        /* --- ÜST KISIM (BAŞLIKLAR) --- */
+        #top-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50vh;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .welcome-text {
+            font-family: var(--font-console);
+            color: var(--color-welcome);
+            background-color: var(--bg-welcome);
+            padding: 15px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            width: fit-content; 
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+        }
+
+        .blog-title {
+            font-family: var(--font-comic);
+            color: var(--color-title);
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        /* --- ALT KISIM (LİSTE) --- */
+        #bottom-section {
+            position: absolute;
+            top: 50vh;
+            left: 0;
+            width: 100%;
+            height: 50vh;
+            overflow-y: auto;
+            padding: 20px 40px;
+        }
+
+        ul {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item { text-align: left; }
+
+        .file-link {
+            color: var(--color-link);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: var(--font-console);
+            word-break: break-word;
+            display: block;
+            transition: transform 0.2s;
+        }
+
+        .file-link:hover {
+            color: #fff;
+            text-shadow: 0 0 8px var(--color-link);
+            transform: translateX(10px);
+        }
+
+        /* --- POPUP MODAL --- */
+        #modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modal-window {
+            width: 80%;
+            max-width: 800px;
+            height: 80vh;
+            background: var(--modal-bg);
+            color: var(--modal-text);
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            font-family: sans-serif;
+        }
+
+        .modal-header {
+            background: #000080;
+            padding: 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .close-btn {
+            background: #c0c0c0;
+            border-top: 2px solid #fff;
+            border-left: 2px solid #fff;
+            border-right: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 2px 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .close-btn:active {
+            border-top: 2px solid #000;
+            border-left: 2px solid #000;
+            border-right: 2px solid #fff;
+            border-bottom: 2px solid #fff;
+        }
+
+        #modal-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            font-family: var(--font-console);
+            white-space: pre-wrap;
+            background: #fff;
+            border: 2px solid;
+            border-color: #888 #fff #fff #888;
+            margin: 10px;
+            color: #000;
+        }
+
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #dfdfdf; }
+        ::-webkit-scrollbar-thumb { 
+            background: #c0c0c0; 
+            border: 2px solid;
+            border-color: #fff #888 #888 #fff;
+        }
+
+        @media (max-width: 700px) {
+            ul { grid-template-columns: 1fr; }
+            .welcome-text { font-size: 1.2rem; }
+            #intro-logo { width: 150px; left: 20px; top: 20px; }
+            #ascii-art-container { font-size: 8px; }
+            #main-gif { width: 100px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- INTRO LAYER (MAVİ EKRAN) -->
+    <div id="intro-layer">
+        <!-- SOLDA LOGO -->
+        <img src="https://raw.githubusercontent.com/decentralize-dfw/finder/main/LOGO-1.png" id="intro-logo" alt="DFW Logo">
+        
+        <!-- ORTADA ASCII ART -->
+        <div id="ascii-art-container"></div>
+    </div>
+
+    <!-- MAIN SCREEN ANIMATED GIF (Sağ Üstte Loop) -->
+    <img src="https://raw.githubusercontent.com/decentralize-dfw/finder/main/logoanimated.gif" id="main-gif" alt="Animated Logo">
+
+    <!-- MODAL POPUP -->
+    <div id="modal-overlay">
+        <div id="modal-window">
+            <div class="modal-header">
+                <span id="modal-title-text">DFW_READER.EXE</span>
+                <button class="close-btn" onclick="closeModal()">X</button>
+            </div>
+            <div id="modal-content">LOADING...</div>
+        </div>
+    </div>
+
+    <!-- ÜST KISIM -->
+    <div id="top-section">
+        <div class="welcome-text">
+            WELCOME.<br>
+            THESE ARE DFW WRITINGS.<br>
+            STRANGE THOUGHTS SPANNING TIME<br>
+            REGARDING THE GRAY AREAS BETWEEN<br>
+            ART, DESIGN, AND TECHNOLOGY.
+        </div>
+        
+        <div class="blog-title">
+            digital forgery workshop blog
+        </div>
+    </div>
+
+    <!-- ALT KISIM -->
+    <div id="bottom-section">
+        <ul id="file-list">
+            <li style="grid-column: 1 / -1; color:#fff;">LOADING ARCHIVE...</li>
+        </ul>
+        
+        <div style="margin-top:30px; font-size:0.8rem; color:#fff; opacity:0.7;">
+            DFW_ARCHIVE // 2021-FUTURE
+        </div>
+    </div>
+
+    <script>
+        const USER = 'decentralize-dfw';
+        const REPO = 'dfw-blog';
+        const FOLDER = ''; 
+
+        // ASCII SANAT VERİSİ (Geri Geldi!)
+        const asciiArt = `
+      :::::::::  :::::::::: :::       :::      
+     :+:    :+: :+:        :+:       :+:       
+    +:+    +:+ +:+        +:+       +:+        
+   +#+    +:+ :#::+::#   +#+  +:+  +#+         
+  +#+    +#+ +#+        +#+ +#+#+ +#+          
+ #+#    #+# #+#         #+#+# #+#+#            
+#########  ###          ###   ###              
+      :::::::::  :::        ::::::::   ::::::::
+     :+:    :+: :+:       :+:    :+: :+:    :+:
+    +:+    +:+ +:+       +:+    +:+ +:+        
+   +#++:++#+  +#+       +#+    +:+ :#:         
+  +#+    +#+ +#+       +#+    +#+ +#+   +#+#   
+ #+#    #+# #+#       #+#    #+# #+#    #+#    
+#########  ########## ########   ########      
+`;
+
+        window.addEventListener('load', () => {
+            // 1. ASCII Sanatını Render Et
+            renderAscii();
+
+            // 2. Intro 5 Saniye Sonra Kaybolsun
+            setTimeout(() => {
+                document.getElementById('intro-layer').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('intro-layer').style.display = 'none';
+                    fetchFiles();
+                }, 1500);
+            }, 5000); // 5 Saniye
+        });
+
+        // ASCII Karakter Render Fonksiyonu
+        function renderAscii() {
+            const container = document.getElementById('ascii-art-container');
+            let html = '';
+            const lines = asciiArt.split('\n');
+            lines.forEach(line => {
+                for (let char of line) {
+                    html += `<span class="char">${char}</span>`;
+                }
+                html += '<br>';
+            });
+            container.innerHTML = html;
+        }
+
+        function parseFilename(filename) {
+            let name = filename.replace(/\.(txt|md)$/i, '');
+            const dateRegex = /(\d{1,2}[a-z]{3,}\d{2,4}|\d{2,4}[a-z]{3,}\d{1,2}|\d{1,2}[\.\-]\d{1,2}[\.\-]\d{2,4})$/i;
+            const match = name.match(dateRegex);
+            
+            let dateStr = 'UNKNOWN';
+            let cleanTitle = name;
+
+            if (match) {
+                dateStr = match[0];
+                cleanTitle = name.replace(dateRegex, '').trim();
+                cleanTitle = cleanTitle.replace(/[\-_]+$/, '').trim();
+            }
+
+            return { title: cleanTitle, date: dateStr, originalName: name };
+        }
+
+        async function fetchFiles() {
+            const listContainer = document.getElementById('file-list');
+            try {
+                const apiUrl = `https://api.github.com/repos/${USER}/${REPO}/contents/${FOLDER}`;
+                const res = await fetch(apiUrl);
+                
+                if (!res.ok) throw new Error(`Status: ${res.status}`);
+                const files = await res.json();
+
+                const ignored = ['index.html', 'style.css', 'README.md', 'LICENSE', 'CNAME'];
+                const postFiles = files.filter(f => 
+                    f.type === 'file' && 
+                    !ignored.includes(f.name) &&
+                    (f.name.endsWith('.txt') || f.name.endsWith('.md') || !f.name.includes('.'))
+                );
+
+                postFiles.sort((a, b) => b.name.localeCompare(a.name));
+
+                listContainer.innerHTML = '';
+                if(postFiles.length === 0) {
+                    listContainer.innerHTML = '<li>NO LOGS FOUND.</li>';
+                    return;
+                }
+
+                postFiles.forEach(file => {
+                    const parsed = parseFilename(file.name);
+                    const li = document.createElement('li');
+                    li.className = 'file-item';
+                    
+                    li.innerHTML = `
+                        <a href="#" class="file-link" onclick="openModal(event, '${file.download_url}', '${parsed.title}', '${parsed.date}')">
+                            ${parsed.title}
+                        </a>
+                    `;
+                    listContainer.appendChild(li);
+                });
+
+            } catch(e) {
+                console.error(e);
+                listContainer.innerHTML = `<li style="color:red; background:rgba(0,0,0,0.8);">ERROR: ${e.message}</li>`;
+            }
+        }
+
+        async function openModal(e, url, title, date) {
+            e.preventDefault();
+            const modal = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            const headerTitle = document.getElementById('modal-title-text'); 
+            
+            headerTitle.innerText = title; 
+
+            modal.style.display = 'flex';
+            content.innerText = 'LOADING...';
+
+            try {
+                const r = await fetch(url);
+                const txt = await r.text();
+                
+                const dateHeader = `DATE=${date}\n\n`;
+                
+                content.innerHTML = '';
+                content.textContent = dateHeader + txt;
+
+                const shareLink = document.createElement('a');
+                shareLink.href = url;
+                shareLink.target = '_blank';
+                shareLink.innerText = 'SHARE';
+                
+                shareLink.style.display = 'block';
+                shareLink.style.marginTop = '40px';
+                shareLink.style.fontFamily = "'Comic Sans MS', 'Comic Sans', cursive, sans-serif";
+                shareLink.style.color = 'magenta';
+                shareLink.style.fontSize = '2em'; 
+                shareLink.style.textDecoration = 'underline';
+                shareLink.style.fontWeight = 'bold';
+
+                content.appendChild(shareLink);
+                
+            } catch(err) {
+                content.innerText = 'Error: ' + err.message;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+        
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if(e.target === e.currentTarget) closeModal();
+        });
+    </script>
+</body>
+</html>
